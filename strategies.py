@@ -1,5 +1,6 @@
 #   coding: utf-8
 #   blink的转换器
+
 import json
 from strategies_load import strategy
 
