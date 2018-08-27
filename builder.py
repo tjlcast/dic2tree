@@ -120,7 +120,7 @@ class StructuredDataTool(AbstractBuilder):
         :return:
         """
         self.nodes_mapper.pop(self.root.id)
-        self.root.id = 1
+        self.root.id = 0
         self.root.parent_id = -1
         self.root.ext_data = []
         self.nodes_mapper.setdefault(self.root.id, self.root)
