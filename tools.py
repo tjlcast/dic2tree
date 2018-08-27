@@ -1,8 +1,11 @@
 #   coding: utf-8
 #   tools
 
+from exceptions import NotSupportParamException
+from exceptions import NodeNotFoundException
 from strategies_load import strategies
 from TriTree import TriTree
+from utils import ObjUtils
 import io
 import sys
 import json
@@ -295,6 +298,54 @@ class TreeTool:
         val = get_data_from_tree_by_path(input_data, tree)
         return val
 
-    def add_nodes(self):
-        # todo
-        pass
+    def upsert_node(self, node_info, id_name="id", parent_name="parent", strategy_name="default"):
+        """
+        给当前树添加节点信息，依据 id_name 和 parent_name
+        :param node_info:
+        :param id_name:
+        :param parent_name:
+        :param strategy_name:
+        :return:
+        """
+        id = node_info.get(id_name)
+        parent = node_info.get(parent_name)
+        parent_node = self.node_mapper.get(parent)
+
+        cnode = TriTree(None, None, parent, parent_node.leve+1, True)
+        cnode.id = id
+        parent_node.children[parent] = cnode
+
+        strategy = strategies[strategy_name]
+        strategy(parent_node, cnode, node_info)
+
+    def add_nodes(self, node_info_list, id_name="id", parent_name="parent", strategy_name="defualt"):
+        """
+        添加一批节点，依据 id_name 和 parent_name
+        :param node_info_list:
+        :param id_name:
+        :param parent_name:
+        :param strategy_name:
+        :return:
+        """
+        if type(node_info_list) != type(list()):
+            raise NotSupportParamException("node_info_list is not a list. ")
+        for node_info in node_info_list:
+            self.upsert_node(node_info, id_name=id_name, parent_name=parent_name, strategy_name=strategy_name)
+
+    def merge_tree(self, tree_info):
+        """
+        合并两个树
+        :param tree_info: 另一颗树的 root
+        :return:
+        """
+        if ObjUtils.obj_belong2class(tree_info, TriTree):
+            raise NotSupportParamException("tree_info must be a TriTree. ")
+        root = tree_info
+        id = tree_info.get("id")
+        parent = tree_info.get("parent_id")
+
+        parent_node = self.node_mapper.get(parent)
+        if not parent_node:
+            raise NodeNotFoundException("can't find node %s" % (id))
+        parent_node.get("children")[id] = root
+
